@@ -1,10 +1,6 @@
-use clap::Parser;
-use cli_arguments::TracepixCliArguments;
+use std::process::ExitCode;
 
-mod cli_arguments;
-
-fn main() {
-    let args = TracepixCliArguments::parse();
-
-    println!("{:#?}", args);
+// Dev-only harness for running tracepix locally.
+fn main() -> anyhow::Result<ExitCode> {
+    tracepix::run()
 }

@@ -10,7 +10,7 @@ pub struct TracepixCliArguments {
     pub target_img: PathBuf,
 
     #[arg(short, long)]
-    pub otput_path: Option<PathBuf>,
+    pub output_path: Option<PathBuf>,
 
     #[arg(short, long)]
     pub threshold: f32,
