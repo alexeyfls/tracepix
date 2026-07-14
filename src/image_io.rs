@@ -28,6 +28,13 @@ impl Image {
         Ok((img1, img2))
     }
 
+    #[inline]
+    pub fn pixel(&self, x: u32, y: u32) -> &[u8; 4] {
+        let idx = (y as usize * self.width as usize + x as usize) * 4;
+        self.data[idx..idx + 4].try_into().unwrap()
+    }
+
+    #[inline]
     pub fn same_dimensions(&self, other: &Self) -> bool {
         self.width == other.width && self.height == other.height
     }
