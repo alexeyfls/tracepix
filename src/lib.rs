@@ -3,9 +3,9 @@ use clap::Parser;
 use image::save_buffer;
 
 use cli_arguments::TracepixCliArguments;
-use image_io::Image;
+pub use image_io::Image;
 
-use crate::compare::{CompareOptions, compare_images};
+pub use crate::compare::{CompareOptions, compare_images};
 
 mod antialiasing;
 mod cli_arguments;

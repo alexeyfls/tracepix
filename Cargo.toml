@@ -8,3 +8,9 @@ anyhow = "1.0.99"
 clap = { version = "4.5.45", features = ["derive"] }
 image = { version = "0.25.6", default-features = false, features = ["png", "jpeg"] }
 
+[dev-dependencies]
+criterion = { version = "0.8", features = ["html_reports"] }
+
+[[bench]]
+name = "diff"
+harness = false
