@@ -95,3 +95,96 @@ fn grayscale(px: &[u8; 4]) -> u8 {
     let luma = 0.299 * px[0] as f32 + 0.587 * px[1] as f32 + 0.114 * px[2] as f32;
     (255.0 - (255.0 - luma) * 0.1) as u8
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const WHITE: [u8; 4] = [255, 255, 255, 255];
+    const GRAY: [u8; 4] = [128, 128, 128, 255];
+    const BLACK: [u8; 4] = [0, 0, 0, 255];
+
+    fn image(width: u32, height: u32, pixels: &[[u8; 4]]) -> Image {
+        assert_eq!(pixels.len(), (width * height) as usize);
+
+        let mut data = Vec::<u8>::with_capacity(pixels.len() * 4);
+        for px in pixels {
+            data.extend_from_slice(px);
+        }
+
+        Image {
+            width,
+            height,
+            data,
+        }
+    }
+
+    fn solid(width: u32, height: u32, px: [u8; 4]) -> Image {
+        image(width, height, &vec![px; (width * height) as usize])
+    }
+
+    fn count(reference: &Image, target: &Image, detect_antialiasing: bool) -> usize {
+        compare_images(
+            reference,
+            target,
+            &CompareOptions {
+                threshold: 0.0,
+                detect_antialiasing,
+                emit_diff_image: false,
+            },
+        )
+        .diff_count
+    }
+
+    #[test]
+    fn identical_images_have_no_diff() {
+        let a = solid(4, 4, GRAY);
+        let b = solid(4, 4, GRAY);
+
+        assert_eq!(count(&a, &b, false), 0);
+    }
+
+    #[test]
+    fn single_changed_pixel_counts_once() {
+        let a = solid(4, 4, WHITE);
+        let mut b = solid(4, 4, WHITE);
+        b.data[0..4].copy_from_slice(&BLACK);
+
+        assert_eq!(count(&a, &b, false), 1);
+    }
+
+    #[test]
+    fn same_luma_different_color_is_flagged() {
+        // Pure red and a gray of near-equal brightness: a luma-only metric would
+        // miss this, but the YIQ chroma terms catch it.
+        let red = [255, 0, 0, 255];
+        let gray76 = [76, 76, 76, 255];
+
+        let a = solid(4, 4, red);
+        let mut b = solid(4, 4, red);
+        b.data[0..4].copy_from_slice(&gray76);
+
+        assert_eq!(count(&a, &b, false), 1);
+    }
+
+    #[test]
+    fn antialiased_pixel_is_excused() {
+        // A vertical white|gray|black edge. The gray transition pixel on the
+        // middle row shifts slightly: without AA detection it's a real diff,
+        // with it the 3×3 neighborhood recognizes anti-aliasing.
+        let rows = 5;
+        let mut ref_px = Vec::new();
+        for _ in 0..rows {
+            ref_px.extend_from_slice(&[WHITE, GRAY, BLACK]);
+        }
+
+        let reference = image(3, rows, &ref_px);
+        let mut target = image(3, rows, &ref_px);
+
+        let idx = (2 * 3 + 1) * 4;
+        target.data[idx..idx + 4].copy_from_slice(&[120, 120, 120, 255]);
+
+        assert_eq!(count(&reference, &target, false), 1);
+        assert_eq!(count(&reference, &target, true), 0);
+    }
+}
