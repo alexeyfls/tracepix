@@ -3,6 +3,10 @@ name = "tracepix"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
 [dependencies]
 anyhow = "1.0.99"
 clap = { version = "4.5.45", features = ["derive"] }

@@ -43,7 +43,7 @@ pub fn compare_images(
     let pairs = ref_px.iter().zip(target_px.iter());
 
     for (idx, (a, b)) in pairs.enumerate() {
-        let mut is_diff = color_delta(a, b).abs() > max_delta;
+        let mut is_diff = color_delta(a, b) > max_delta;
         let mut is_aa = false;
 
         if is_diff && options.detect_antialiasing {

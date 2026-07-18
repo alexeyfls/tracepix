@@ -1,11 +1,11 @@
-use std::{hint::black_box, path::Path};
+use std::{hint::black_box, path::Path, time::Duration};
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 
 use tracepix::{CompareOptions, Image, compare_images};
 
-const REFERENCE: &str = "images/donkey.png";
-const TARGET: &str = "images/donkey-2.png";
+const REFERENCE: &str = "images/water-4k.png";
+const TARGET: &str = "images/water-4k-2.png";
 
 fn options(detect_antialiasing: bool) -> CompareOptions {
     CompareOptions {
@@ -44,5 +44,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group! {
+    name = benches;
+    config = Criterion::default().measurement_time(Duration::from_secs(10));
+    targets = criterion_benchmark
+}
 criterion_main!(benches);

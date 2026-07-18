@@ -1,3 +1,5 @@
+const WHITE_COLOR: [f32; 3] = [255.0, 255.0, 255.0];
+
 /// Luma-only difference between two pixels. Used by anti-aliasing detection,
 /// which only cares about brightness. Signed: positive means `a` is brighter.
 #[inline]
@@ -8,7 +10,7 @@ pub fn brightness_delta(a: &[u8; 4], b: &[u8; 4]) -> f32 {
     rgb2y(r1, g1, b1) - rgb2y(r2, g2, b2)
 }
 
-/// Signed perceptual delta between two RGBA pixel.
+/// Perceptual delta between two RGBA pixel.
 #[inline]
 pub fn color_delta(a: &[u8; 4], b: &[u8; 4]) -> f32 {
     if a == b {
@@ -29,24 +31,24 @@ pub fn color_delta(a: &[u8; 4], b: &[u8; 4]) -> f32 {
     let i_diff = i1 - i2;
     let q_diff = q1 - q2;
 
-    let delta = 0.5053 * y_diff * y_diff + 0.299 * i_diff * i_diff + 0.1957 * q_diff * q_diff;
-
-    if y1 > y2 { -delta } else { delta }
+    0.5053 * y_diff * y_diff + 0.299 * i_diff * i_diff + 0.1957 * q_diff * q_diff
 }
 
 /// Composite an RGBA pixel onto white, yielding straight RGB as f32.
 /// Fully-opaque pixels skip the blend entirely.
 #[inline]
 fn blend_to_rgb(px: &[u8; 4]) -> [f32; 3] {
-    if px[3] == 255 {
-        [px[0] as f32, px[1] as f32, px[2] as f32]
-    } else {
-        let alpha = px[3] as f32 / 255.0;
-        [
-            blend(px[0], alpha),
-            blend(px[1], alpha),
-            blend(px[2], alpha),
-        ]
+    match px[3] {
+        x if x == 0 => WHITE_COLOR,
+        x if x == 255 => [px[0] as f32, px[1] as f32, px[2] as f32],
+        _ => {
+            let alpha = px[3] as f32 / 255.0;
+            [
+                blend(px[0], alpha),
+                blend(px[1], alpha),
+                blend(px[2], alpha),
+            ]
+        }
     }
 }
 
