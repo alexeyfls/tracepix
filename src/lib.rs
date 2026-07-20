@@ -1,14 +1,10 @@
-use anyhow::Context;
-use clap::Parser;
-use image::save_buffer;
+use std::path::Path;
 
-use cli_arguments::TracepixCliArguments;
 pub use image_io::Image;
 
 pub use crate::compare::{CompareOptions, compare_images};
 
 mod antialiasing;
-mod cli_arguments;
 mod color;
 mod compare;
 mod image_io;
@@ -26,47 +22,41 @@ pub enum TracepixResult {
     },
 }
 
-pub fn run() -> anyhow::Result<TracepixResult> {
-    process(TracepixCliArguments::parse())
+pub struct Comparison {
+    pub result: TracepixResult,
+    pub diff_image: Option<Image>,
 }
 
-fn process(args: TracepixCliArguments) -> anyhow::Result<TracepixResult> {
-    let (reference, target) = Image::load_pair(&args.reference_img, &args.target_img)?;
+pub fn compare(
+    reference: &Path,
+    target: &Path,
+    options: &CompareOptions,
+) -> anyhow::Result<Comparison> {
+    let (reference, target) = Image::load_pair(reference, target)?;
 
     if !reference.same_dimensions(&target) {
-        return Ok(TracepixResult::LayoutMismatch {
-            reference: (reference.width, reference.height),
-            target: (target.width, target.height),
+        return Ok(Comparison {
+            result: TracepixResult::LayoutMismatch {
+                reference: (reference.width, reference.height),
+                target: (target.width, target.height),
+            },
+            diff_image: None,
         });
     }
 
-    let result = compare_images(
-        &reference,
-        &target,
-        &CompareOptions {
-            threshold: args.threshold,
-            detect_antialiasing: args.antialiasing,
-            emit_diff_image: args.output_path.is_some(),
-        },
-    );
+    let outcome = compare_images(&reference, &target, options);
 
-    if let (Some(path), Some(image)) = (args.output_path, result.diff_image) {
-        save_buffer(
-            &path,
-            &image.data,
-            image.width,
-            image.height,
-            image::ExtendedColorType::Rgba8,
-        )
-        .with_context(|| format!("Failed to write diff to image to {}", path.display()))?;
-    }
-
-    if result.diff_count == 0 {
-        Ok(TracepixResult::Identical)
+    let result = if outcome.diff_count == 0 {
+        TracepixResult::Identical
     } else {
-        Ok(TracepixResult::Different {
-            diff_count: result.diff_count,
-            percentage: result.diff_percentage,
-        })
-    }
+        TracepixResult::Different {
+            diff_count: outcome.diff_count,
+            percentage: outcome.diff_percentage,
+        }
+    };
+
+    Ok(Comparison {
+        result,
+        diff_image: outcome.diff_image,
+    })
 }

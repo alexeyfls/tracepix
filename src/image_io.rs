@@ -28,6 +28,17 @@ impl Image {
         Ok((img1, img2))
     }
 
+    pub fn save(&self, path: &Path) -> Result<()> {
+        image::save_buffer(
+            path,
+            &self.data,
+            self.width,
+            self.height,
+            image::ExtendedColorType::Rgba8,
+        )
+        .with_context(|| format!("failed to write {}", path.display()))
+    }
+
     #[inline]
     pub fn pixel(&self, x: u32, y: u32) -> &[u8; 4] {
         let idx = (y as usize * self.width as usize + x as usize) * 4;
