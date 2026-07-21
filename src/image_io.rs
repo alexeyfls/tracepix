@@ -22,10 +22,8 @@ impl Image {
     }
 
     pub fn load_pair(path1: &Path, path2: &Path) -> Result<(Self, Self)> {
-        let img1 = Self::load(path1)?;
-        let img2 = Self::load(path2)?;
-
-        Ok((img1, img2))
+        let (img1, img2) = rayon::join(|| Self::load(path1), || Self::load(path2));
+        Ok((img1?, img2?))
     }
 
     pub fn save(&self, path: &Path) -> Result<()> {
