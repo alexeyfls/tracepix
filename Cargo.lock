@@ -704,9 +704,18 @@ name = "tracepix"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "clap",
  "criterion",
  "image",
+ "rayon",
+]
+
+[[package]]
+name = "tracepix-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "tracepix",
 ]
 
 [[package]]

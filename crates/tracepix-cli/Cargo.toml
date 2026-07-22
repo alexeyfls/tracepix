@@ -1,0 +1,14 @@
+[package]
+name = "tracepix-cli"
+version = "0.1.0"
+edition = "2024"
+
+# Keep the produced binary named `tracepix` despite the crate being `tracepix-cli`.
+[[bin]]
+name = "tracepix"
+path = "src/main.rs"
+
+[dependencies]
+tracepix = { path = "../tracepix" }
+anyhow = "1.0.99"
+clap = { version = "4.5.45", features = ["derive"] }
